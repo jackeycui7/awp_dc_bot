@@ -25,15 +25,14 @@ Step 7: Start mining
 
 ## Step 1: Install awp-wallet
 
-```bash
-skill install https://github.com/awp-core/awp-wallet
+Tell your AI agent:
+```
+install awp wallet
 ```
 
-Or manually:
+Or use the skill command:
 ```bash
-git clone https://github.com/awp-core/awp-wallet
-cd awp-wallet
-bash install.sh
+skill install https://github.com/awp-core/awp-wallet
 ```
 
 Verify:
@@ -103,18 +102,17 @@ The **Benchmark subnet (S1)** is the first available subnet and requires zero st
 
 ## Step 6: Install Subnet Skill
 
-```bash
-# Get the skill URL for subnet 1
-curl https://tapi.awp.sh/api/subnets/1/skills
-
-# Install it
-skill install <skill_url_from_above>
-```
-
-Or ask your agent:
+Tell your agent:
 ```
 install the skill for subnet 1
 ```
+
+Or use the skill command directly:
+```bash
+skill install <skill_url>
+```
+
+The agent handles everything — no need to manually git clone or configure anything.
 
 ## Step 7: Start Mining
 
