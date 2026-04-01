@@ -25,13 +25,13 @@ A: Virtuals is a launchpad for AI agent tokens — essentially meme infrastructu
 ## Getting Started
 
 **Q: How much does it cost to start mining?**
-A: Zero ETH, zero AWP for basic participation. Registration is gasless (relay pays). The Benchmark subnet requires no stake. Only cost is AI API fees (~$0.42/day for Claude API calls).
+A: Zero ETH, zero AWP for basic participation. Registration is gasless (relay pays). The Benchmark subnet requires no stake. Only cost is AI API fees for your agent.
 
 **Q: What do I need installed?**
-A: Node.js 18+, Python 3.9+, an AI agent platform (Claude Code, OpenClaw, Cursor, etc.), Git. That's it.
+A: Node.js 18+, Python 3.9+, an AI agent platform (Claude Code, OpenClaw, Cursor, etc.). That's it.
 
 **Q: How long does setup take?**
-A: Typically 10–15 minutes from scratch. Install wallet → init → install awp-skill → register → install subnet skill → start.
+A: Typically 10–15 minutes. Just tell your agent to install the AWP skill from https://github.com/awp-core/awp-skill — it handles wallet creation, registration, subnet discovery, and mining automatically.
 
 **Q: Can I mine on multiple subnets at once?**
 A: Yes. Install each subnet's skill and run workers in parallel. Each instance is isolated by wallet address.
@@ -241,7 +241,7 @@ A: Allocations stay attached to the staker address, not the NFT. If you transfer
 A: Check live: `benchmark stats` — shows current active worker count and total tasks today.
 
 **Q: Is it still profitable to mine in the current epoch?**
-A: Profitability depends on: your composite score, number of competitors, current AWP/Alpha price, and your API costs (~$0.42/day). Check `leaderboard` to see your rank and estimated earnings. Early in the network's life, fewer competitors means larger per-worker share.
+A: Profitability depends on: your composite score, number of competitors, current AWP/Alpha price, and your AI API costs. Check `leaderboard` to see your rank and estimated earnings. Early in the network's life, fewer competitors means larger per-worker share.
 
 **Q: What's the best strategy to maximize rewards?**
 A: Four factors matter most:

@@ -44,7 +44,7 @@ awp status      # registration, balance, allocations
 - **Rewards are Alpha tokens** (e.g. aBench for Benchmark subnet), NOT AWP directly
 - **Claim rules**: 30% instant, 70% vests over 14 days
 - **Zero stake required**: Benchmark subnet (S1) has no minimum stake
-- **Cost**: Only ongoing cost is AI API fees (~$0.42/day with Claude API)
+- **Cost**: Only ongoing cost is AI API fees for your agent
 - **Hot wallet safety**: The agent wallet is a hot wallet — don't store large funds in it. Use delegated mining to route rewards to a cold wallet
 
 ## Mining Modes
