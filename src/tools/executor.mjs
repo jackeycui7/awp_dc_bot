@@ -5,7 +5,7 @@ const AWP_API = 'https://tapi.awp.sh';
 const BENCH_API = 'https://tapis1.awp.sh';
 const BSC_RPC = 'https://bsc-dataseed.binance.org';
 const AWP_TOKEN = '0x0000969dDC625E1c084ECE9079055Fbc50F400a1';
-const GITHUB_ORG = 'awp-network';
+const GITHUB_ORG = 'awp-core';
 
 const TIMEOUT = 10000;
 
