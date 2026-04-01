@@ -29,10 +29,14 @@ The Manager role enables **delegated stake allocation**: a Principal can let the
 ```
 One address does everything. Simplest. Best for beginners.
 
-Set up with:
+Set up with — tell your agent:
+```
+start working as solo miner
+```
+
+Or via command:
 ```bash
-# Gasless, zero ETH needed
-python3 scripts/relay-start.py --mode principal
+awp-wallet register --mode principal
 ```
 
 ### Option B — Delegated Mining
@@ -43,10 +47,14 @@ python3 scripts/relay-start.py --mode principal
 ```
 Hot wallet binds to cold wallet. Rewards flow to cold wallet. Hot wallet only needs minimal gas.
 
-Set up with:
+Set up with — tell your agent:
+```
+start working as delegated miner, bind to <cold_wallet_address>
+```
+
+Or via command:
 ```bash
-# On the hot wallet (agent):
-python3 scripts/relay-start.py --mode agent --target <cold_wallet_address>
+awp-wallet register --mode agent --target <cold_wallet_address>
 ```
 
 **Key rule**: After `bind(target)`, you do NOT need to call `setRecipient` separately. The binding tree handles reward routing automatically.
@@ -69,16 +77,13 @@ curl https://tapi.awp.sh/api/users/0x<your_address>
 Deposits require **on-chain transaction** (need BNB for gas on BSC):
 
 ```bash
-# Option 1: All-in-one (register + deposit + allocate)
-python3 scripts/onchain-register-and-stake.py \
-  --amount 1000 \
-  --lock-days 30 \
-  --subnet-id 1
+# Option 1: All-in-one — tell your agent:
+# "deposit 1000 AWP, lock for 30 days, allocate to subnet 1"
 
-# Option 2: Step by step
-python3 scripts/onchain-deposit.py --amount 1000 --lock-days 30
+# Option 2: Via awp-wallet commands
+awp-wallet deposit --amount 1000 --lock-days 30
 # Note the tokenId from output, then:
-python3 scripts/onchain-allocate.py --staker 0x<you> --agent 0x<agent> --subnet-id 1 --amount 1000
+awp-wallet allocate --staker 0x<you> --agent 0x<agent> --subnet-id 1 --amount 1000
 ```
 
 **Two-step process**: deposit does `approve(StakeNFT, amount)` then `deposit(amount, lockDuration)` in sequence.
@@ -97,22 +102,14 @@ Each position is an ERC721 NFT with:
 Allocation assigns your staked AWP to influence a specific (agent, subnet) pair's emission weight:
 
 ```bash
-# Allocate
-python3 scripts/onchain-allocate.py \
-  --staker 0x<your_address> \
-  --agent 0x<agent_address> \
-  --subnet-id 1 \
-  --amount 1000
+# Allocate — tell your agent: "allocate 1000 AWP to subnet 1"
+awp-wallet allocate --staker 0x<your_address> --agent 0x<agent_address> --subnet-id 1 --amount 1000
 
-# Deallocate (immediate, no delay)
-python3 scripts/onchain-deallocate.py \
-  --staker 0x<your_address> \
-  --agent 0x<agent_address> \
-  --subnet-id 1 \
-  --amount 1000
+# Deallocate — tell your agent: "deallocate 1000 AWP from subnet 1"
+awp-wallet deallocate --staker 0x<your_address> --agent 0x<agent_address> --subnet-id 1 --amount 1000
 
-# Move stake between agents/subnets (atomic)
-python3 scripts/onchain-reallocate.py \
+# Reallocate — tell your agent: "move 500 AWP from subnet 1 to subnet 2"
+awp-wallet reallocate \
   --staker 0x<your_address> \
   --from-agent 0x<old_agent> --from-subnet 1 \
   --to-agent 0x<new_agent> --to-subnet 2 \
@@ -126,7 +123,8 @@ python3 scripts/onchain-reallocate.py \
 Withdrawal is only possible **after the lock period expires**:
 
 ```bash
-python3 scripts/onchain-withdraw.py --token-id <nft_id>
+# Tell your agent: "withdraw my staking position"
+awp-wallet withdraw --token-id <nft_id>
 ```
 
 Common error: `PositionExpired` when calling `addToPosition` on an expired lock — you must withdraw first, then create a new deposit.
@@ -139,10 +137,10 @@ curl https://tapi.awp.sh/api/staking/user/0x<address>/positions
 ## Gasless Operations
 
 These operations work with **zero ETH** via EIP-712 relay:
-- `bind(target)` → `relay-start.py --mode agent`
-- `setRecipient` → `relay-start.py --mode principal`
-- `register` → included in relay-start
-- `allocate` → `scripts/onchain-allocate.py` has gasless variant via relay
+- `bind(target)` → tell your agent: "bind to <address>"
+- `setRecipient` → tell your agent: "set reward recipient to <address>"
+- `register` → tell your agent: "start working"
+- `allocate` → tell your agent: "allocate stake to subnet 1"
 - `activateSubnet` → via relay
 
 These always require **ETH/BNB for gas**:

@@ -8,13 +8,17 @@ The AWP token on BSC is preconfigured: `0x0000969dDC625E1c084ECE9079055Fbc50F400
 
 ## Installation
 
-```bash
-skill install https://github.com/awp-core/awp-wallet
-# or
-git clone https://github.com/awp-core/awp-wallet && cd awp-wallet && bash install.sh
+Tell your AI agent:
+```
+install awp wallet
 ```
 
-If `awp-wallet` is not found after install:
+Or use the skill command:
+```bash
+skill install https://github.com/awp-core/awp-wallet
+```
+
+If `awp-wallet` is not found after install, your agent can fix the PATH automatically. If doing it manually:
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 source ~/.bashrc

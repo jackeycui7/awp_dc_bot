@@ -38,23 +38,16 @@ You also need BNB for the registration transaction gas (~$0.01 on BSC).
 
 ## Registering a Subnet
 
-### Gasless (Recommended)
-```bash
-python3 scripts/relay-register-subnet.py \
-  --name "My Subnet" \
-  --symbol "MYS" \
-  --skills-uri "https://raw.githubusercontent.com/you/repo/main/SKILL.md"
+Tell your agent:
+```
+register a new subnet named "My Subnet" with symbol "MYS"
 ```
 
-Uses dual EIP-712 signatures (Permit + RegisterSubnet) — zero ETH required.
+The agent will handle the registration (gasless via EIP-712 relay, zero ETH required).
 
-### On-Chain
+For manual registration via awp-wallet:
 ```bash
-python3 scripts/onchain-register.py \
-  --name "My Subnet" \
-  --symbol "MYS" \
-  --skills-uri "https://..." \
-  --min-stake 0
+awp-wallet register-subnet --name "My Subnet" --symbol "MYS" --skills-uri "https://..."
 ```
 
 ## Activating a Subnet
@@ -62,7 +55,8 @@ python3 scripts/onchain-register.py \
 After registration, the subnet is in Pending state. The SubnetNFT owner must activate it:
 
 ```bash
-python3 scripts/onchain-subnet-lifecycle.py --action activate --subnet-id <id>
+# Tell your agent: "activate my subnet"
+awp-wallet subnet-lifecycle --action activate --subnet-id <id>
 ```
 
 The script checks current state before attempting the transition and rejects invalid transitions (e.g., cannot activate an already Active subnet).
@@ -72,21 +66,23 @@ The script checks current state before attempting the transition and rejects inv
 ### Update Skills URI
 Points to your SKILL.md so agents can discover and install the subnet skill:
 ```bash
-python3 scripts/onchain-subnet-update.py --subnet-id <id> \
+# Tell your agent: "update skills URI for my subnet"
+awp-wallet subnet-update --subnet-id <id> \
   --skills-uri "https://raw.githubusercontent.com/you/repo/main/SKILL.md"
 ```
 
 ### Update Min Stake Recommendation
 Not enforced on-chain — just a hint for agents:
 ```bash
-python3 scripts/onchain-subnet-update.py --subnet-id <id> --min-stake 1000000000000000000000
+awp-wallet subnet-update --subnet-id <id> --min-stake 1000000000000000000000
 # (value in wei, so 1000 AWP = 1000 × 10^18)
 ```
 
 ### Pause / Resume
 ```bash
-python3 scripts/onchain-subnet-lifecycle.py --action pause  --subnet-id <id>
-python3 scripts/onchain-subnet-lifecycle.py --action resume --subnet-id <id>
+# Tell your agent: "pause my subnet" or "resume my subnet"
+awp-wallet subnet-lifecycle --action pause  --subnet-id <id>
+awp-wallet subnet-lifecycle --action resume --subnet-id <id>
 ```
 
 ## SubnetManager Strategies
