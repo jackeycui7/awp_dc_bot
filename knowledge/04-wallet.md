@@ -8,20 +8,13 @@ The AWP token on BSC is preconfigured: `0x0000969dDC625E1c084ECE9079055Fbc50F400
 
 ## Installation
 
-Tell your AI agent:
-```
-install awp wallet
-```
+The wallet is installed automatically when you install the AWP skill. You don't need to install it separately.
 
-Or use the skill command:
-```bash
-skill install https://github.com/awp-core/awp-wallet
-```
+Your AI agent handles all wallet operations: creation, initialization, unlocking, and address management. You should never need to run wallet commands manually.
 
-If `awp-wallet` is not found after install, your agent can fix the PATH automatically. If doing it manually:
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-source ~/.bashrc
+If you need to check your wallet address, ask your agent:
+```
+what's my wallet address
 ```
 
 ## Wallet Storage
@@ -53,34 +46,17 @@ Three modes (in priority order):
 
 ## Session Tokens
 
-Every operation that touches keys or chain requires a session token:
+Your agent manages session tokens automatically. You don't need to manually unlock or lock the wallet.
 
-```bash
-# Get a token (unlocks the wallet)
-awp-wallet unlock --duration 3600 --scope full
-# Returns: { "sessionToken": "wlt_abc123...", "expires": "..." }
-
-# Lock (revoke all sessions)
-awp-wallet lock
-```
-
-**Scope levels**:
-- `read` — balance queries, history, status checks
-- `transfer` — send, approve, revoke transactions
-- `full` — all of above + sign-message, sign-typed-data, EIP-7702
-
-Sessions expire automatically. The benchmark-worker auto-refreshes every 25 minutes.
+**How it works internally** (for reference):
+- The agent calls `awp-wallet unlock` to get a session token
+- Session tokens have scoped permissions: `read`, `transfer`, or `full`
+- The benchmark-worker auto-refreshes tokens every 25 minutes
+- Sessions expire automatically
 
 ## Multi-Agent Isolation
 
-Run multiple wallets simultaneously by setting `AWP_AGENT_ID`:
-```bash
-export AWP_AGENT_ID=agent-1
-awp-wallet receive   # uses wallets/agent-1/ directory
-
-export AWP_AGENT_ID=agent-2
-awp-wallet receive   # uses wallets/agent-2/ directory
-```
+Your agent handles this automatically. If you need to run multiple agents, each gets its own wallet via the `AWP_AGENT_ID` environment variable — your agent sets this up when needed.
 
 ## All 28 Commands
 
