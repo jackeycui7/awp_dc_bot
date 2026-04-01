@@ -99,6 +99,9 @@ export async function handleMessage(message) {
 
   try {
     await withUserLock(userId, async () => {
+      // React: received
+      await message.react('👀').catch(() => {});
+
       // Build user message content
       const content = await extractContent(message);
 
@@ -108,8 +111,22 @@ export async function handleMessage(message) {
       // Get full conversation history
       const messages = getMessages(userId);
 
+      // Callback to update reaction on tool use
+      let reacted = false;
+      const onToolCall = async () => {
+        if (!reacted) {
+          reacted = true;
+          await message.reactions.removeAll().catch(() => {});
+          await message.react('🔍').catch(() => {});
+        }
+      };
+
       // Call Claude
-      const reply = await chat(messages);
+      const reply = await chat(messages, onToolCall);
+
+      // React: done
+      await message.reactions.removeAll().catch(() => {});
+      await message.react('✅').catch(() => {});
 
       // Add assistant reply to session
       addMessage(userId, 'assistant', reply);

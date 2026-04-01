@@ -24,7 +24,7 @@ const systemPrompt = `${soulRaw}
 ## Knowledge Base
 ${knowledgeIndex()}`;
 
-export async function chat(messages, imageUrls = []) {
+export async function chat(messages, onToolCall) {
   // Build the current message list for Claude
   // Normalize: user content can be array (with images) or string
   // Assistant content must be string for history, array only for tool_use rounds
@@ -85,6 +85,7 @@ export async function chat(messages, imageUrls = []) {
 
     // Execute all tool calls and build results
     const toolResults = [];
+    if (onToolCall) await onToolCall();
     for (const tu of toolUses) {
       console.log(`[tool] ${tu.name}(${JSON.stringify(tu.input)})`);
       const result = await executeTool(tu.name, tu.input);
