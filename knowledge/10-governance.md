@@ -46,24 +46,16 @@ Via the AWP skill:
 # Provide: description, target contracts, calldata (for executable proposals)
 ```
 
-Via script:
-```bash
-# See references/commands-governance.md in awp-skill for full ABI encoding details
-python3 scripts/onchain-vote.py ...
+Tell your agent:
+```
+vote for proposal <id>
+```
+or
+```
+vote against proposal <id> because <reason>
 ```
 
-## Voting
-
-Cast a vote on an existing proposal:
-```bash
-python3 scripts/onchain-vote.py \
-  --proposal-id <id> \
-  --support <0=against|1=for|2=abstain> \
-  --token-ids <nft_id_1> <nft_id_2> \
-  --reason "My reasoning here"
-```
-
-**Important**: You must supply your StakeNFT token IDs explicitly. The contract does not enumerate them automatically.
+The agent handles ABI encoding and StakeNFT token ID lookup automatically.
 
 Check current proposals:
 ```bash

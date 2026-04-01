@@ -68,11 +68,10 @@ This prints your 12-word seed phrase. Write it down, store it offline. Anyone wi
 
 **Q: I think my wallet was compromised / someone has my private key. What do I do?**
 A: Act immediately:
-1. Create a new wallet on a different machine: `awp-wallet init`
-2. Get the new address: `awp-wallet receive`
-3. Send any remaining funds to the new address (or directly to a safe cold wallet)
-4. If you had delegated mining set up: bind the new hot wallet to your cold wallet with `bind(newHotWallet)` — this re-routes future rewards
-5. Do NOT re-use the compromised address for anything
+1. Tell your agent on a different/clean machine: "install awp skill and create a new wallet"
+2. Send any remaining funds from the old address to the new one (or directly to a safe cold wallet)
+3. If you had delegated mining: tell your agent to re-bind to your cold wallet
+4. Do NOT re-use the compromised address for anything
 
 The private key is at `~/.openclaw-wallet/wallets/default/keystore.enc` — if someone had access to your machine and your password, assume the key is compromised.
 
@@ -184,13 +183,9 @@ A: The worker auto-restarts up to 5 times on consecutive failures (with exponent
 A: The wallet and Python scripts are cross-platform. Windows is supported but less tested than Linux/macOS. Running on a Linux VPS is recommended for stable 24/7 operation.
 
 **Q: How do I update the worker to a new version?**
-A: The worker has a built-in auto-update mechanism — it checks for updates at startup. You can also trigger a manual update:
+A: The worker has a built-in auto-update mechanism — it checks for updates at startup. You can also tell your agent:
 ```
-update
-```
-Or force a reinstall:
-```bash
-skill install https://github.com/awp-core/s1-benchmark-skill
+update worker
 ```
 
 **Q: How do I know if my worker is actually running and submitting tasks?**
