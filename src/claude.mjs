@@ -1,0 +1,111 @@
+// Claude API client with tool_use loop
+import Anthropic from '@anthropic-ai/sdk';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { tools } from './tools/definitions.mjs';
+import { executeTool } from './tools/executor.mjs';
+import { knowledgeIndex } from './knowledge.mjs';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  baseURL: process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com',
+});
+
+const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5-20250929';
+const MAX_TOOL_ROUNDS = 8;
+
+// Build system prompt
+const soulRaw = readFileSync(join(__dirname, '..', 'SOUL.md'), 'utf-8');
+const systemPrompt = `${soulRaw}
+
+## Knowledge Base
+${knowledgeIndex()}`;
+
+export async function chat(messages, imageUrls = []) {
+  // Build the current message list for Claude
+  // Normalize: user content can be array (with images) or string
+  // Assistant content must be string for history, array only for tool_use rounds
+  const claudeMessages = messages.map(m => {
+    if (m.role === 'user') {
+      // User content: keep as-is (can be array with text+image blocks)
+      return { role: 'user', content: m.content };
+    }
+    // Assistant content: ensure it's a text string
+    if (typeof m.content === 'string') {
+      return { role: 'assistant', content: m.content };
+    }
+    // If somehow stored as array, extract text
+    if (Array.isArray(m.content)) {
+      const text = m.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
+      return { role: 'assistant', content: text || '(no response)' };
+    }
+    return { role: m.role, content: String(m.content) };
+  });
+
+  let rounds = 0;
+  while (rounds < MAX_TOOL_ROUNDS) {
+    rounds++;
+
+    let response;
+    try {
+      console.log('[claude] sending messages:', JSON.stringify(claudeMessages.map(m => ({
+        role: m.role,
+        content: typeof m.content === 'string' ? m.content.slice(0, 50) :
+          Array.isArray(m.content) ? m.content.map(b => ({ type: b.type, ...(b.type === 'image' ? { source_type: b.source?.type } : {}) })) : '?'
+      }))));
+      response = await client.messages.create({
+        model: MODEL,
+        max_tokens: 4096,
+        system: systemPrompt,
+        tools,
+        messages: claudeMessages,
+      });
+    } catch (e) {
+      if (e.message?.includes('timeout') || e.code === 'ETIMEDOUT') {
+        return '抱歉，AI 服务暂时响应较慢，请稍后再试。';
+      }
+      console.error('Claude API error:', e.message);
+      return '抱歉，服务暂时出错了，请稍后再试。';
+    }
+
+    // Check if Claude wants to use tools
+    const toolUses = response.content.filter(b => b.type === 'tool_use');
+    const textParts = response.content.filter(b => b.type === 'text').map(b => b.text);
+
+    if (toolUses.length === 0 || response.stop_reason === 'end_turn') {
+      // No tool calls, return text
+      return textParts.join('\n') || '(no response)';
+    }
+
+    // Add assistant message with tool calls
+    claudeMessages.push({ role: 'assistant', content: response.content });
+
+    // Execute all tool calls and build results
+    const toolResults = [];
+    for (const tu of toolUses) {
+      console.log(`[tool] ${tu.name}(${JSON.stringify(tu.input)})`);
+      const result = await executeTool(tu.name, tu.input);
+      const resultStr = typeof result === 'string' ? result :
+        result?.content ? result.content : JSON.stringify(result, null, 2);
+      toolResults.push({
+        type: 'tool_result',
+        tool_use_id: tu.id,
+        content: resultStr.slice(0, 10000), // cap tool result size
+      });
+    }
+
+    // Add tool results
+    claudeMessages.push({ role: 'user', content: toolResults });
+
+    // If there was text alongside tool calls, and stop_reason is end_turn, return it
+    if (response.stop_reason === 'end_turn' && textParts.length > 0) {
+      return textParts.join('\n');
+    }
+    // Otherwise loop — Claude will process tool results and respond
+  }
+
+  return '查询完成，但处理轮次过多，请简化问题再试。';
+}
