@@ -77,9 +77,13 @@ Example: "Make sure you're on the latest versions: AWP Skill v1.7.0, Mine Skill 
 Query AWP RootNet (JSON-RPC). Examples:
 - Registration: `method: "address.check", params: { address: "0x..." }`
 - Portfolio: `method: "users.getPortfolio", params: { address: "0x..." }`
-- Staking: `method: "staking.getBalance", params: { address: "0x..." }`
+- **Staking positions**: `method: "staking.getPositionsGlobal", params: { address: "0x..." }` ← USE THIS for checking stake
+- **Staking balance**: `method: "staking.getUserBalanceGlobal", params: { address: "0x..." }` ← USE THIS for total staked
+- Allocations: `method: "staking.getAllocations", params: { address: "0x...", chainId: 8453 }`
 - WorkNet info: `method: "subnets.get", params: { worknetId: "845300000002" }`
 - Skill URL: `method: "subnets.getSkills", params: { worknetId: "..." }`
+
+**IMPORTANT**: For staking queries, always use the `Global` variants (`getPositionsGlobal`, `getUserBalanceGlobal`). The non-global methods may return empty results.
 
 ### worknet_api
 Query a specific WorkNet. Specify which worknet:
