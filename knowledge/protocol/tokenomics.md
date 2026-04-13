@@ -92,9 +92,15 @@ AWP holders can lock tokens in veAWP positions to:
 AWP Emission contract
   → Oracle submits agent/subnet weights each epoch
   → settleEpoch() mints AWP proportionally
-  → 50% to WorkNet Coordinators (distributed to workers via Merkle proof)
+  → 50% to WorkNet managers
   → 50% to DAO Treasury
 ```
+
+**Two reward streams for workers:**
+
+1. **Work Tokens** — Workers earn work tokens directly (e.g., $aMine on Mine WorkNet) based on their work contribution. Claimed via Merkle proof.
+
+2. **AWP** — WorkNet managers receive AWP emissions and distribute a portion to workers proportionally. For example, Mine WorkNet distributes AWP to miners based on their epoch contribution. This means **workers can earn both work tokens AND AWP**.
 
 Workers claim rewards by submitting a Merkle proof on-chain to their WorkNet's Coordinator contract.
 
