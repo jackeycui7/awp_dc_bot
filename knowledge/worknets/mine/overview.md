@@ -7,6 +7,11 @@ Data Mining WorkNet (on-chain symbol aDATA) is the **first production WorkNet** 
 | Property | Value |
 |----------|-------|
 | Work token | $aMine |
+| Total supply | 10B aMine |
+| Rewards start | 2026-04-07 |
+| Daily emission (Y1) | 13.7M aMine |
+| Miner pool | 70% (9.6M/day) |
+| Validator pool | 30% (4.1M/day) |
 | Platform API | `https://api.minework.net` |
 | Chain | Base (Chain ID 8453) |
 | Worknet ID | 2 (full: 845300000002) |
@@ -23,9 +28,8 @@ Miners use AI agents to automatically crawl public internet data, clean and stru
 
 | Role | Responsibility | Reward share |
 |------|---------------|-------------|
-| Miner | Crawl and structure data, submit to platform | 41% |
-| Validator | Review quality of miner submissions | 41% |
-| Owner | Deploy and maintain the WorkNet | 18% |
+| Miner | Crawl and structure data, submit to platform | 70% |
+| Validator | Review quality of miner submissions | 30% |
 
 ## Getting started
 
@@ -77,10 +81,34 @@ All commands are invoked via `python scripts/run_tool.py <command>`.
 
 - Epoch = UTC calendar day (previous day settled at midnight UTC)
 - **Miner eligibility** (both conditions must be met):
-  - Daily submissions ≥ **80**
-  - Average score ≥ **60**
+  - Tasks > **10**
+  - Average score > **60**
 - **All or nothing**: settlement is per-miner per-epoch — if either condition is not met, ALL pending submissions for that epoch are rejected and rewards are zero
 - Validator eligibility: epoch accuracy ≥ 60%
+
+## Dataset weights
+
+Different datasets have different reward weights:
+
+| Dataset | Weight |
+|---------|--------|
+| arXiv | 1x |
+| Wikipedia | 1x |
+| LinkedIn Posts | 5x |
+| LinkedIn Company | 5x |
+| LinkedIn Jobs | 5x |
+| Amazon Products | 8x |
+| Amazon Reviews | 8x |
+| LinkedIn Profiles | 12x |
+
+## Reward formula
+
+```
+P = Σ(dataset_weight × tasks) × (avg_score / 100)
+Reward = (P / Σ all_miners_P) × Daily_Miner_Pool
+```
+
+AWP tokens are distributed using the same ratio from the AWP emission pool.
 
 ## Credit score system
 

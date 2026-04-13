@@ -87,8 +87,8 @@ Credit changes:
 ## Epoch Eligibility
 
 To qualify for rewards in an epoch:
-- Daily submissions >= **80**
-- Average score >= **60**
+- Tasks > **10**
+- Average score > **60**
 
 If either condition is not met, ALL submissions for that epoch are rejected.
 

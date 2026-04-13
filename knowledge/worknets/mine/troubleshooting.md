@@ -68,8 +68,8 @@ Check status: `python scripts/run_tool.py agent-control status`
 
 ### Symptom: Submissions but zero rewards
 Check epoch eligibility:
-- Daily submissions >= **80**
-- Average score >= **60**
+- Tasks > **10**
+- Average score > **60**
 
 If either not met, ALL submissions rejected.
 
