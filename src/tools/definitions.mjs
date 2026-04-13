@@ -108,8 +108,8 @@ export const tools = [
       properties: {
         command: {
           type: 'string',
-          enum: ['issues', 'releases', 'repo', 'contributors'],
-          description: 'GitHub command'
+          enum: ['issues', 'releases', 'tags', 'latest_version', 'repo', 'contributors'],
+          description: 'GitHub command. Use latest_version to get the most recent version (checks releases first, then tags)'
         },
         repo: {
           type: 'string',
