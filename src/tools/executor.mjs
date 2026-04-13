@@ -168,16 +168,32 @@ async function execGithubQuery({ command, repo }) {
     case 'tags':
       return ghGet(`/repos/${org}/${repoName}/tags?per_page=5`);
     case 'latest_version': {
-      // Try releases first, fall back to tags
+      // Try releases first
       const releases = await ghGet(`/repos/${org}/${repoName}/releases?per_page=1`);
       if (Array.isArray(releases) && releases.length > 0) {
         return { version: releases[0].tag_name, source: 'release', name: releases[0].name, published_at: releases[0].published_at };
       }
+      // Fall back to tags
       const tags = await ghGet(`/repos/${org}/${repoName}/tags?per_page=1`);
       if (Array.isArray(tags) && tags.length > 0) {
         return { version: tags[0].name, source: 'tag' };
       }
-      return { error: 'No releases or tags found' };
+      // Fall back to SKILL.md (for skill repos without releases/tags)
+      try {
+        const skillMdRes = await fetch(`https://raw.githubusercontent.com/${org}/${repoName}/main/SKILL.md`, {
+          headers: { 'User-Agent': 'awp-bot' }
+        });
+        if (skillMdRes.ok) {
+          const skillMd = await skillMdRes.text();
+          const versionMatch = skillMd.match(/^version:\s*(.+)$/m);
+          if (versionMatch) {
+            return { version: versionMatch[1].trim(), source: 'SKILL.md' };
+          }
+        }
+      } catch (e) {
+        // Ignore SKILL.md fetch errors
+      }
+      return { error: 'No releases, tags, or SKILL.md version found' };
     }
     case 'repo':
       return ghGet(`/repos/${org}/${repoName}`);
