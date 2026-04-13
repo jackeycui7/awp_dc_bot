@@ -168,7 +168,29 @@ async function execGithubQuery({ command, repo }) {
     case 'tags':
       return ghGet(`/repos/${org}/${repoName}/tags?per_page=5`);
     case 'latest_version': {
-      // Try releases first
+      const rawBase = `https://raw.githubusercontent.com/${org}/${repoName}/main`;
+      // Try SKILL.md first (for skill repos)
+      try {
+        const skillMdRes = await fetch(`${rawBase}/SKILL.md`, { headers: { 'User-Agent': 'awp-bot' } });
+        if (skillMdRes.ok) {
+          const skillMd = await skillMdRes.text();
+          const versionMatch = skillMd.match(/^version:\s*(.+)$/m);
+          if (versionMatch) {
+            return { version: versionMatch[1].trim(), source: 'SKILL.md' };
+          }
+        }
+      } catch (e) { /* fall through */ }
+      // Try package.json (for node repos like awp-wallet)
+      try {
+        const pkgRes = await fetch(`${rawBase}/package.json`, { headers: { 'User-Agent': 'awp-bot' } });
+        if (pkgRes.ok) {
+          const pkg = await pkgRes.json();
+          if (pkg.version) {
+            return { version: pkg.version, source: 'package.json' };
+          }
+        }
+      } catch (e) { /* fall through */ }
+      // Fall back to releases
       const releases = await ghGet(`/repos/${org}/${repoName}/releases?per_page=1`);
       if (Array.isArray(releases) && releases.length > 0) {
         return { version: releases[0].tag_name, source: 'release', name: releases[0].name, published_at: releases[0].published_at };
@@ -178,22 +200,7 @@ async function execGithubQuery({ command, repo }) {
       if (Array.isArray(tags) && tags.length > 0) {
         return { version: tags[0].name, source: 'tag' };
       }
-      // Fall back to SKILL.md (for skill repos without releases/tags)
-      try {
-        const skillMdRes = await fetch(`https://raw.githubusercontent.com/${org}/${repoName}/main/SKILL.md`, {
-          headers: { 'User-Agent': 'awp-bot' }
-        });
-        if (skillMdRes.ok) {
-          const skillMd = await skillMdRes.text();
-          const versionMatch = skillMd.match(/^version:\s*(.+)$/m);
-          if (versionMatch) {
-            return { version: versionMatch[1].trim(), source: 'SKILL.md' };
-          }
-        }
-      } catch (e) {
-        // Ignore SKILL.md fetch errors
-      }
-      return { error: 'No releases, tags, or SKILL.md version found' };
+      return { error: 'No version found in SKILL.md, package.json, releases, or tags' };
     }
     case 'repo':
       return ghGet(`/repos/${org}/${repoName}`);
