@@ -100,7 +100,10 @@ AWP Emission contract
 
 1. **Work Tokens** — Workers earn work tokens directly (e.g., $aMine on Mine WorkNet) based on their work contribution. Claimed via Merkle proof.
 
-2. **AWP** — WorkNet managers receive AWP emissions and distribute a portion to workers proportionally. For example, Mine WorkNet distributes AWP to miners based on their epoch contribution. This means **workers can earn both work tokens AND AWP**.
+2. **AWP** — WorkNet managers receive AWP emissions based on stake allocation to their WorkNet. **How managers distribute this AWP is entirely their decision — the protocol does not enforce any specific distribution policy.** Each WorkNet sets its own rules.
+
+**Per-WorkNet AWP distribution policies:**
+- **Mine WorkNet**: Distributes AWP to miners/validators proportionally based on epoch contribution
 
 Workers claim rewards by submitting a Merkle proof on-chain to their WorkNet's Coordinator contract.
 
