@@ -2,9 +2,9 @@
 
 ## Overview
 
-Staking in AWP means locking AWP tokens in a StakeNFT position and allocating that stake to (agent, subnet) pairs. Staked AWP amplifies the emission weight of backed agents — more stake behind an agent means more AWP minted to that subnet each epoch.
+Staking in AWP means locking AWP tokens in a veAWP position and allocating that stake to (agent, subnet) pairs. Staked AWP amplifies the emission weight of backed agents — more stake behind an agent means more AWP minted to that subnet each epoch.
 
-**Staking is optional** — you can mine on the Benchmark subnet with zero stake. Staking becomes relevant when you want to influence emission distribution or boost your own mining returns.
+**Staking is optional for some WorkNets** — many allow participation with zero stake. Staking becomes relevant when you want to influence emission distribution, meet validator requirements, or boost your returns.
 
 ## Three Account Roles
 
@@ -12,7 +12,7 @@ AWP uses three roles to separate fund custody from operational execution:
 
 | Role | Also called | Responsibilities |
 |------|-------------|-----------------|
-| **Principal** | Cold wallet | Holds AWP, creates StakeNFT positions, sets reward recipient, participates in governance |
+| **Principal** | Cold wallet | Holds AWP, creates veAWP positions, sets reward recipient, participates in governance |
 | **Agent** | Hot wallet | Bound to a Principal, executes tasks on WorkNets, rewards routed to Principal automatically |
 | **Manager** | Delegate | Granted by Principal to an Agent — can allocate/deallocate stake on behalf of the Principal, but cannot withdraw funds or remove itself |
 
@@ -23,7 +23,7 @@ The Manager role enables **delegated stake allocation**: a Principal can let the
 ### Option A — Solo Mining
 ```
 [Your address]
-  ├── holds StakeNFT (staker role)
+  ├── holds veAWP (staker role)
   ├── runs agent work (agent role)
   └── receives rewards (recipient role)
 ```
@@ -68,7 +68,7 @@ awp-wallet register --mode agent --target <cold_wallet_address>
 
 To check your current binding:
 ```bash
-curl https://tapi.awp.sh/api/users/0x<your_address>
+curl https://api.awp.sh/api/users/0x<your_address>
 # Returns: { bound_to, recipient, registered_at }
 ```
 
@@ -86,16 +86,16 @@ awp-wallet deposit --amount 1000 --lock-days 30
 awp-wallet allocate --staker 0x<you> --agent 0x<agent> --subnet-id 1 --amount 1000
 ```
 
-**Two-step process**: deposit does `approve(StakeNFT, amount)` then `deposit(amount, lockDuration)` in sequence.
+**Two-step process**: deposit does `approve(veAWP, amount)` then `deposit(amount, lockDuration)` in sequence.
 
-## StakeNFT Position Details
+## veAWP Position Details
 
 Each position is an ERC721 NFT with:
 - `amount` — locked AWP
 - `lockEndTime` — when you can withdraw
 - `createdAt` — used for governance anti-manipulation
 
-**Transfer restriction**: You can transfer a StakeNFT to another address, but only if you won't become under-collateralized (total staked ≥ total allocated after transfer).
+**Transfer restriction**: You can transfer a veAWP NFT to another address, but only if you won't become under-collateralized (total staked ≥ total allocated after transfer).
 
 ## Allocation
 
@@ -131,7 +131,7 @@ Common error: `PositionExpired` when calling `addToPosition` on an expired lock 
 
 Check your positions:
 ```bash
-curl https://tapi.awp.sh/api/staking/user/0x<address>/positions
+curl https://api.awp.sh/api/staking/user/0x<address>/positions
 ```
 
 ## Gasless Operations
@@ -141,7 +141,9 @@ These operations work with **zero ETH** via EIP-712 relay:
 - `setRecipient` → tell your agent: "set reward recipient to <address>"
 - `register` → tell your agent: "start working"
 - `allocate` → tell your agent: "allocate stake to subnet 1"
+- `deallocate` → tell your agent: "deallocate stake from subnet 1"
 - `activateSubnet` → via relay
+- `registerSubnet` → via relay (dual EIP-712: ERC-2612 Permit + RegisterSubnet)
 
 These always require **ETH/BNB for gas**:
 - `deposit` (approve + deposit)
@@ -155,23 +157,20 @@ These always require **ETH/BNB for gas**:
 awp status   # shows balance, positions, allocations
 
 # Via API directly
-curl https://tapi.awp.sh/api/staking/user/0x<address>/balance
-curl https://tapi.awp.sh/api/staking/user/0x<address>/positions
-curl https://tapi.awp.sh/api/staking/user/0x<address>/allocations
+curl https://api.awp.sh/api/staking/user/0x<address>/balance
+curl https://api.awp.sh/api/staking/user/0x<address>/positions
+curl https://api.awp.sh/api/staking/user/0x<address>/allocations
 ```
 
 ## Voting Power
 
-Staked positions grant governance voting power (contract formula, integer square root):
-```
-s × Math.sqrt(min(remainingTime, 54 weeks) / 7 days)
-```
+Staked positions grant governance voting power (formula: `s × min(√(τ/7), 8)` where τ is lock duration in days):
 
 Examples:
 - 1,000 AWP locked 7 days → 1,000 × 1 = 1,000 power (1×)
 - 1,000 AWP locked 28 days → 1,000 × 2 = 2,000 power (2×)
 - 1,000 AWP locked 112 days → 1,000 × 4 = 4,000 power (4×)
-- 1,000 AWP locked ≥343 days → 1,000 × 7 = 7,000 power (**7× cap**)
-- Maximum multiplier: **7× at 343+ days** (contract caps lock at 54 weeks; integer sqrt(54) = 7)
+- 1,000 AWP locked ≥448 days → 1,000 × 8 = 8,000 power (**8× cap**)
+- Maximum multiplier: **8× at 448+ days** (√(448/7) = √64 = 8)
 
 Only NFTs created **before** a proposal was submitted can vote on it (anti-manipulation).

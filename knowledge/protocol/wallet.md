@@ -4,7 +4,7 @@
 
 `awp-wallet` is a self-custodial EVM wallet designed specifically for AI agents. It exposes 28 commands with JSON output so any agent can consume results programmatically. It supports 400+ EVM chains with 16 preconfigured, and has two transaction modes: direct EOA and gasless ERC-4337.
 
-The AWP token on BSC is preconfigured: `0x0000969dDC625E1c084ECE9079055Fbc50F400a1`
+AWP token contract address is fetched dynamically from the registry — do not hardcode it.
 
 ## Installation
 
@@ -51,7 +51,7 @@ Your agent manages session tokens automatically. You don't need to manually unlo
 **How it works internally** (for reference):
 - The agent calls `awp-wallet unlock` to get a session token
 - Session tokens have scoped permissions: `read`, `transfer`, or `full`
-- The benchmark-worker auto-refreshes tokens every 25 minutes
+- WorkNet workers auto-refresh tokens periodically
 - Sessions expire automatically
 
 ## Multi-Agent Isolation

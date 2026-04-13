@@ -53,6 +53,22 @@ async function extractContent(message) {
     text = text.replace(/<@!?\d+>/g, '').trim();
   }
 
+  // Include replied-to message content as context
+  if (message.reference?.messageId) {
+    try {
+      const replied = await message.channel.messages.fetch(message.reference.messageId);
+      if (replied) {
+        const repliedAuthor = replied.author.bot ? 'Chippy' : replied.author.displayName || replied.author.username;
+        const repliedText = replied.content?.replace(/<@!?\d+>/g, '').trim();
+        if (repliedText) {
+          text = `[Replying to ${repliedAuthor}: "${repliedText}"]\n${text}`;
+        }
+      }
+    } catch {
+      // ignore if message not fetchable
+    }
+  }
+
   if (text) {
     parts.push({ type: 'text', text });
   }
@@ -73,6 +89,20 @@ async function extractContent(message) {
   return parts.length > 0 ? parts : [{ type: 'text', text: '(empty message)' }];
 }
 
+// Reply to a message, falling back to channel.send if the message reference is invalid
+async function safeSend(message, content) {
+  try {
+    await message.reply(content);
+  } catch (e) {
+    if (e.code === 50035 || e.code === 10008) {
+      // Invalid message reference or unknown message — fall back to plain send with mention
+      await message.channel.send(`<@${message.author.id}> ${content}`);
+    } else {
+      throw e;
+    }
+  }
+}
+
 export async function handleMessage(message) {
   // Ignore bots
   if (message.author.bot) return;
@@ -87,7 +117,7 @@ export async function handleMessage(message) {
 
   // Rate limit
   if (!checkRateLimit(userId)) {
-    await message.reply('你发得太快了，请稍等一下再问 😅');
+    await safeSend(message, 'Too many messages — please wait a moment before asking again.');
     return;
   }
 
@@ -135,7 +165,7 @@ export async function handleMessage(message) {
       const chunks = splitMessage(reply);
       for (let i = 0; i < chunks.length; i++) {
         if (i === 0) {
-          await message.reply(chunks[i]);
+          await safeSend(message, chunks[i]);
         } else {
           await message.channel.send(chunks[i]);
         }
@@ -143,7 +173,7 @@ export async function handleMessage(message) {
     });
   } catch (e) {
     console.error('Message handling error:', e);
-    await message.reply('抱歉，处理出错了，请稍后再试。').catch(() => {});
+    await safeSend(message, 'Something went wrong — please try again.').catch(() => {});
   } finally {
     clearInterval(typingInterval);
   }

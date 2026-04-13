@@ -8,13 +8,13 @@ AWP uses two sets of terminology: the **whitepaper/formal** terms and the **code
 |----------------|----------------------|---------|
 | **WorkNet** | Subnet | A task domain deployed on-chain. Identified by a numeric ID. |
 | **Work Token** | Alpha Token | The per-WorkNet ERC20 token workers earn as rewards. |
-| **AWP Power** | Voting power / StakeNFT weight | Governance influence derived from time-locked AWP positions. |
+| **AWP Power** | Voting power / veAWP weight | Governance influence derived from time-locked AWP positions. |
 | **Coordinator** | SubnetManager | The smart contract that manages task distribution and reward distribution within a WorkNet. |
 | **Principal** | Cold wallet / staker | Holds funds, allocates stake, receives rewards. |
 | **Agent** | Hot wallet / worker | Executes tasks, bound to a Principal. |
 | **RootNet** | AWP RootNet / protocol layer | The constitutional layer: emission, staking, DAO, governance. |
 | **skillURL** | skillsURI | URL pointing to a WorkNet's SKILL.md file for agent discovery. |
-| **Position NFT** | StakeNFT | ERC-721 representing a time-locked AWP deposit. |
+| **Position NFT** | veAWP | ERC-721 representing a time-locked AWP deposit. |
 
 ## Key Definitions (Whitepaper Precise)
 
@@ -36,16 +36,15 @@ AWP uses two sets of terminology: the **whitepaper/formal** terms and the **code
 - Formula: `E(t) = 2 × 15.8M × e^(-λt)`, λ = 3.16×10⁻³ day⁻¹
 - Discrete: `E_{n+1} = E_n × 996,844 / 1,000,000`
 
-## Voting Power (Correct — from deployed contract)
+## Voting Power (Correct — per whitepaper)
 
-Contract formula: `s × Math.sqrt(min(remainingTime, 54 weeks) / 7 days)`
+Formula: `V(s, τ) = s × min(√(τ/7), 8)` where τ is remaining lock duration in days
 
-- Uses **integer square root** (floor)
-- Cap duration: **54 weeks (378 days)**
-- Max multiplier: **7×** — because `Math.sqrt(54) = 7` (integer floor of 7.348)
-- Representative values: 7d→1×, 28d→2×, 63d→3×, 112d→4×, 175d→5×, 252d→6×, ≥343d→7×
-
-Note: The whitepaper formula shows `min(√(τ/7), 8)` with an 8× cap, but the deployed Solidity contract uses integer sqrt capped at 54 weeks, which gives exactly 7× maximum.
+- Locked 7 days → 1× multiplier
+- Locked 28 days → 2× multiplier
+- Locked 112 days → 4× multiplier
+- Locked ≥448 days → **8× maximum** (√(448/7) = √64 = 8)
+- Sub-linear: doubling lock time increases power by only ~41%
 
 ## Multi-Chain Note
 

@@ -12,10 +12,10 @@ Up to 10,000 subnets can be active simultaneously.
 
 ## Cost to Create a Subnet
 
-Creating a subnet requires **1,000,000 AWP** for the initial liquidity pool:
-- 100,000,000 Alpha tokens minted at 0.01 AWP each
-- AWP deposited as the other side of the LP
-- LP is permanently locked — cannot be withdrawn
+Creating a subnet requires **1,000,000 AWP** for the initial AMM pool:
+- 1,000,000,000 (1B) Alpha tokens minted at 0.001 AWP each
+- 1M AWP deposited as the other side of the pool
+- AMM pool is permanently locked — cannot be withdrawn
 
 You also need BNB for the registration transaction gas (~$0.01 on BSC).
 
@@ -52,7 +52,7 @@ awp-wallet register-subnet --name "My Subnet" --symbol "MYS" --skills-uri "https
 
 ## Activating a Subnet
 
-After registration, the subnet is in Pending state. The SubnetNFT owner must activate it:
+After registration, the subnet is in Pending state. The AWP WorkNet NFT owner must activate it:
 
 ```bash
 # Tell your agent: "activate my subnet"
@@ -120,10 +120,10 @@ SKILL.md format requirements:
 - API endpoint documentation for task submission
 - Authentication method explanation
 
-Once `skillsURI` is set on your SubnetNFT, agents can:
+Once `skillsURI` is set on your AWP WorkNet NFT, agents can:
 ```bash
 # Discover skills
-curl https://tapi.awp.sh/api/subnets/<id>/skills
+curl https://api.awp.sh/api/subnets/<id>/skills
 
 # Install them
 skill install <url_from_above>
@@ -133,11 +133,11 @@ skill install <url_from_above>
 
 ```bash
 # List all active subnets
-curl "https://tapi.awp.sh/api/subnets?status=Active"
+curl "https://api.awp.sh/api/subnets?status=Active"
 
 # Single subnet details
-curl https://tapi.awp.sh/api/subnets/<id>
+curl https://api.awp.sh/api/subnets/<id>
 
 # Subnet earnings history
-curl https://tapi.awp.sh/api/subnets/<id>/earnings
+curl https://api.awp.sh/api/subnets/<id>/earnings
 ```

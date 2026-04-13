@@ -2,26 +2,21 @@
 
 ## Overview
 
-AWP uses NFT-based quadratic-style governance. Voting power comes from StakeNFT positions (time-weighted locked AWP). The DAO controls protocol parameters, treasury funds, and emergency operations.
+AWP uses NFT-based quadratic-style governance. Voting power comes from veAWP positions (time-weighted locked AWP). The DAO controls protocol parameters, treasury funds, and emergency operations.
 
 ## Voting Power (AWP Power)
 
-Contract formula (integer square root):
-```
-s × Math.sqrt(min(remainingTime, 54 weeks) / 7 days)
-```
-where `s` = staked AWP amount, `remainingTime` = seconds until lock expiry
+Formula: `V(s, τ) = s × min(√(τ/7), 8)` where τ = remaining lock duration in days
 
 - Locked 7 days → 1× multiplier
 - Locked 28 days → 2× multiplier
 - Locked 112 days → 4× multiplier
-- Locked ≥343 days → **7× maximum** (integer sqrt(54) = 7, contract caps at 54 weeks)
+- Locked ≥448 days → **8× maximum** (√(448/7) = √64 = 8)
 - Sub-linear growth: doubling lock time increases power by only ~41%
-- Cap at 54 weeks prevents extreme lock durations from dominating governance
 
 Multiple position NFTs sum: `V_total = Σ V(sᵢ, τᵢ)`
 
-**Anti-manipulation rule**: Only StakeNFT positions created **before** a proposal was submitted can vote on it. You cannot mint a position and immediately vote.
+**Anti-manipulation rule**: Only veAWP positions created **before** a proposal was submitted can vote on it. You cannot mint a position and immediately vote.
 
 ## Two Proposal Types
 
@@ -55,11 +50,11 @@ or
 vote against proposal <id> because <reason>
 ```
 
-The agent handles ABI encoding and StakeNFT token ID lookup automatically.
+The agent handles ABI encoding and veAWP token ID lookup automatically.
 
 Check current proposals:
 ```bash
-curl https://tapi.awp.sh/api/governance/proposals
+curl https://api.awp.sh/api/governance/proposals
 ```
 
 ## Proposal Lifecycle
@@ -77,14 +72,28 @@ Voting parameters (adjustable via governance):
 - Voting period: blocks for voting window
 - Quorum: percentage of total voting power required
 
+## Dual-Scope Governance
+
+AWP governance operates at two distinct scopes:
+
+| Scope | What it covers | Who votes |
+|-------|---------------|-----------|
+| **Global (cross-chain)** | Emission allocation weights for WorkNets | All stakers across all chains, AWP Power aggregated globally, 7-day cycle |
+| **Per-chain** | Treasury spending, protocol parameters, WorkNet bans | Only that chain's stakers; 7-day vote + 48-hour timelock |
+
+Each chain runs an independent DAO contract governing its own treasury. Treasury size is proportional to the WorkNet ecosystem strength on that chain — chains with more productive WorkNets accumulate more governance resources.
+
 ## What Governance Controls
 
-Operations requiring Timelock (DAO approval):
-- `banSubnet(subnetId)` — ban a misbehaving subnet
-- `unbanSubnet(subnetId)` — reinstate a banned subnet
+**Global scope** (cross-chain voting):
+- Emission allocation weights — governance weights for each WorkNet, updated on a 7-day cycle
+
+**Per-chain scope** (local chain stakers only):
+- `banSubnet(subnetId)` — ban a misbehaving WorkNet
+- `unbanSubnet(subnetId)` — reinstate a banned WorkNet
 - `deregisterSubnet(subnetId)` — permanently remove (requires Banned + 30-day immunity)
 - `emergencySetWeight(epoch, index, addr, weight)` — override oracle emission weights
-- `AWPEmission` parameter changes (epoch duration, oracle threshold, etc.)
+- `AWP Emission` parameter changes (epoch duration, staking lock bounds, WorkNet immunity period, initial work token pricing)
 - Treasury fund disbursements
 
 ## Treasury
@@ -93,7 +102,7 @@ The DAO Treasury receives **50% of all AWP emissions** every epoch.
 
 Check treasury balance:
 ```bash
-curl https://tapi.awp.sh/api/governance/treasury
+curl https://api.awp.sh/api/governance/treasury
 ```
 
 Treasury funds can only be moved via approved executable governance proposals (after 2-day timelock).
@@ -103,4 +112,4 @@ Treasury funds can only be moved via approved executable governance proposals (a
 - **Per-tokenId double-vote prevention**: Each NFT can only vote once per proposal
 - **Snapshot at proposal creation**: Only pre-existing positions count
 - **2-day timelock**: Gives the community time to react before execution
-- **Foundation veto (temporary)**: During the early period, a Foundation Senate with veto power and limited term acts as a safety mechanism before full DAO control
+- **Guardian**: An emergency mechanism that can pause the protocol but cannot unpause it — only the timelock can resume. Prevents damage without granting unilateral control.

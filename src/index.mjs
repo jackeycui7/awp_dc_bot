@@ -3,7 +3,7 @@ import { Client, GatewayIntentBits, Partials } from 'discord.js';
 import { handleMessage } from './discord.mjs';
 import { config } from 'dotenv';
 
-config();
+config({ override: true });
 
 const client = new Client({
   intents: [

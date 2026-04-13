@@ -9,12 +9,21 @@ import { knowledgeIndex } from './knowledge.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  baseURL: process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com',
-});
-
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5-20250929';
+// Lazy-initialize client so dotenv has time to run before we read process.env
+let _client = null;
+function getClient() {
+  if (!_client) {
+    _client = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      baseURL: process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com',
+    });
+    console.log('[claude] client init — base:', process.env.ANTHROPIC_BASE_URL, 'model:', process.env.ANTHROPIC_MODEL);
+  }
+  return _client;
+}
+function getModel() {
+  return process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
+}
 const MAX_TOOL_ROUNDS = 8;
 
 // Build system prompt
@@ -23,6 +32,8 @@ const systemPrompt = `${soulRaw}
 
 ## Knowledge Base
 ${knowledgeIndex()}`;
+
+console.log('[claude] system prompt starts with:', systemPrompt.slice(0, 80));
 
 export async function chat(messages, onToolCall) {
   // Build the current message list for Claude
@@ -56,8 +67,8 @@ export async function chat(messages, onToolCall) {
         content: typeof m.content === 'string' ? m.content.slice(0, 50) :
           Array.isArray(m.content) ? m.content.map(b => ({ type: b.type, ...(b.type === 'image' ? { source_type: b.source?.type } : {}) })) : '?'
       }))));
-      response = await client.messages.create({
-        model: MODEL,
+      response = await getClient().messages.create({
+        model: getModel(),
         max_tokens: 4096,
         system: systemPrompt,
         tools,
@@ -65,10 +76,20 @@ export async function chat(messages, onToolCall) {
       });
     } catch (e) {
       if (e.message?.includes('timeout') || e.code === 'ETIMEDOUT') {
-        return '抱歉，AI 服务暂时响应较慢，请稍后再试。';
+        return 'Sorry, the AI service is slow right now. Please try again later.';
       }
       console.error('Claude API error:', e.message);
-      return '抱歉，服务暂时出错了，请稍后再试。';
+      return 'Sorry, the service encountered an error. Please try again later.';
+    }
+
+    // Workaround: proxy bug drops content field on tool_use responses
+    if (!response.content || !Array.isArray(response.content)) {
+      console.error('[claude] BUG: response.content missing!', JSON.stringify(response));
+      // If stop_reason is tool_use but content is missing, it's the proxy bug
+      if (response.stop_reason === 'tool_use') {
+        return 'Sorry, the API proxy has a bug (tool_use response missing content). Please contact admin to check the proxy service.';
+      }
+      return 'Sorry, received an abnormal API response. Please try again later.';
     }
 
     // Check if Claude wants to use tools
@@ -77,7 +98,9 @@ export async function chat(messages, onToolCall) {
 
     if (toolUses.length === 0 || response.stop_reason === 'end_turn') {
       // No tool calls, return text
-      return textParts.join('\n') || '(no response)';
+      const reply = textParts.join('\n') || '(no response)';
+      console.log('[claude] reply preview:', reply.slice(0, 80));
+      return reply;
     }
 
     // Add assistant message with tool calls
@@ -108,5 +131,5 @@ export async function chat(messages, onToolCall) {
     // Otherwise loop — Claude will process tool results and respond
   }
 
-  return '查询完成，但处理轮次过多，请简化问题再试。';
+  return 'Query completed but too many processing rounds. Please simplify your question.';
 }

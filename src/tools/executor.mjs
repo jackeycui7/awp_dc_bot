@@ -1,19 +1,17 @@
 // Tool executor — direct HTTP calls, no shell exec
 import { readKnowledge } from '../knowledge.mjs';
+import { worknets, listWorknets, getWorknetApi } from '../config/worknets.mjs';
 
-const AWP_API = 'https://tapi.awp.sh';
-const BENCH_API = 'https://tapis1.awp.sh';
-const BSC_RPC = 'https://bsc-dataseed.binance.org';
-const AWP_TOKEN = '0x0000969dDC625E1c084ECE9079055Fbc50F400a1';
-const GITHUB_ORG = 'awp-core';
+const AWP_API = 'https://api.awp.sh/v2';
+const BASE_RPC = 'https://mainnet.base.org';
 
 const TIMEOUT = 10000;
 
-async function get(url) {
+async function fetchWithTimeout(url, options = {}) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT);
   try {
-    const res = await fetch(url, { signal: ctrl.signal });
+    const res = await fetch(url, { ...options, signal: ctrl.signal });
     if (!res.ok) return { error: `HTTP ${res.status}: ${res.statusText}`, url };
     return await res.json();
   } catch (e) {
@@ -23,11 +21,28 @@ async function get(url) {
   }
 }
 
+async function get(url, headers = {}) {
+  return fetchWithTimeout(url, { headers });
+}
+
+async function jsonRpc(url, method, params = {}) {
+  return fetchWithTimeout(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: Date.now(),
+      method,
+      params
+    })
+  });
+}
+
 async function rpcCall(method, params) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT);
   try {
-    const res = await fetch(BSC_RPC, {
+    const res = await fetch(BASE_RPC, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
@@ -42,42 +57,58 @@ async function rpcCall(method, params) {
   }
 }
 
-// AWP RootNet API
-async function execAwpApi({ command, address, subnet_id, status }) {
+// AWP RootNet API (JSON-RPC 2.0)
+async function execAwpApi({ method, params = {} }) {
+  const result = await jsonRpc(AWP_API, method, params);
+  if (result.error && typeof result.error === 'object' && result.error.message) {
+    return { error: result.error.message, code: result.error.code };
+  }
+  if (result.result !== undefined) {
+    return result.result;
+  }
+  return result;
+}
+
+// Generic WorkNet API
+async function execWorknetApi({ worknet, command, address, epoch_id }) {
+  const apiBase = getWorknetApi(worknet);
+  if (!apiBase) {
+    return { error: `Unknown worknet: ${worknet}. Available: ${Object.keys(worknets).join(', ')}` };
+  }
+
+  // Build endpoint based on worknet type
+  // Currently all worknets follow similar API patterns, but can be customized per worknet
+  const base = `${apiBase}/api/mining/v1`;
+
   switch (command) {
-    case 'health': return get(`${AWP_API}/api/health`);
-    case 'registry': return get(`${AWP_API}/api/registry`);
-    case 'user': return get(`${AWP_API}/api/users/${address}`);
-    case 'balance': return get(`${AWP_API}/api/staking/user/${address}/balance`);
-    case 'staking_positions': return get(`${AWP_API}/api/staking/user/${address}/positions`);
-    case 'staking_balance': return get(`${AWP_API}/api/staking/user/${address}/balance`);
-    case 'subnets': return get(`${AWP_API}/api/subnets${status ? `?status=${status}` : ''}`);
-    case 'subnet': return get(`${AWP_API}/api/subnets/${subnet_id}`);
-    case 'emission': return get(`${AWP_API}/api/emission/current`);
-    case 'awp_price': return get(`${AWP_API}/api/tokens/awp`);
-    case 'proposals': return get(`${AWP_API}/api/governance/proposals`);
-    case 'treasury': return get(`${AWP_API}/api/governance/treasury`);
-    default: return { error: `Unknown command: ${command}` };
+    case 'profile':
+      return get(`${base}/profiles/${address}`);
+    case 'worker':
+      return get(`${base}/profiles/miners/${address}`);
+    case 'worker_epochs':
+      return get(`${base}/profiles/miners/${address}/epochs`);
+    case 'validator_epochs':
+      return get(`${base}/profiles/validators/${address}/epochs`);
+    case 'epoch_snapshot':
+      return get(`${base}/epochs/${epoch_id}/snapshot`);
+    case 'epoch_settlement':
+      return get(`${base}/epochs/${epoch_id}/settlement-results`);
+    case 'workers_online':
+      return get(`${base}/miners/online`);
+    case 'validators_online':
+      return get(`${base}/validators/online`);
+    case 'workers_list':
+      return get(`${base}/miners`);
+    case 'config':
+      return get(`${apiBase}/api/core/v1/protocol-config`);
+    default:
+      return { error: `Unknown command: ${command}` };
   }
 }
 
-// Benchmark subnet API
-async function execBenchmarkApi({ command, address, date }) {
-  switch (command) {
-    case 'stats': return get(`${BENCH_API}/api/v1/stats`);
-    case 'leaderboard': return get(`${BENCH_API}/api/v1/leaderboard`);
-    case 'worker': return get(`${BENCH_API}/api/v1/workers/${address}/today`);
-    case 'claims':
-      if (date) return get(`${BENCH_API}/api/v1/claims/${address}/${date}`);
-      return get(`${BENCH_API}/api/v1/claims/${address}`);
-    case 'epoch': return get(`${BENCH_API}/api/v1/epochs`);
-    case 'benchmark_sets': return get(`${BENCH_API}/api/v1/benchmark-sets`);
-    default: return { error: `Unknown command: ${command}` };
-  }
-}
-
-// BSC chain query
+// Base chain query
 async function execChainQuery({ command, address }) {
+  const AWP_TOKEN = '0x0000A1050AcF9DEA8af9c2E74f0D7CF43f1000A1';
   const ERC20_BALANCE = '0x70a08231';
   const TOTAL_SUPPLY = '0x18160ddd';
 
@@ -106,7 +137,8 @@ async function execChainQuery({ command, address }) {
       if (raw?.error) return raw;
       return { blockNumber: parseInt(raw, 16) };
     }
-    default: return { error: `Unknown command: ${command}` };
+    default:
+      return { error: `Unknown command: ${command}` };
   }
 }
 
@@ -116,18 +148,29 @@ async function execGithubQuery({ command, repo }) {
   const token = process.env.GITHUB_TOKEN;
   if (token) headers['Authorization'] = `token ${token}`;
 
-  const ghGet = (path) => get(`https://api.github.com${path}`);
+  const repoOrg = {
+    'awp-skill': 'awp-core',
+    'awp-wallet': 'awp-core',
+    'rootnet': 'awp-core',
+    'mine-skill': 'awp-worknet',
+    'data-mining-platform': 'data-mining-org'
+  };
+
+  const org = repoOrg[repo] || 'awp-core';
+  const repoName = repo || 'awp-wallet';
+  const ghGet = (path) => get(`https://api.github.com${path}`, headers);
 
   switch (command) {
     case 'issues':
-      return ghGet(`/repos/${GITHUB_ORG}/${repo || 'awp-wallet'}/issues?state=open&per_page=10`);
+      return ghGet(`/repos/${org}/${repoName}/issues?state=open&per_page=10`);
     case 'releases':
-      return ghGet(`/repos/${GITHUB_ORG}/${repo || 'awp-wallet'}/releases?per_page=5`);
+      return ghGet(`/repos/${org}/${repoName}/releases?per_page=5`);
     case 'repo':
-      return ghGet(`/repos/${GITHUB_ORG}/${repo || 'awp-wallet'}`);
+      return ghGet(`/repos/${org}/${repoName}`);
     case 'contributors':
-      return ghGet(`/repos/${GITHUB_ORG}/${repo || 'awp-wallet'}/contributors?per_page=10`);
-    default: return { error: `Unknown command: ${command}` };
+      return ghGet(`/repos/${org}/${repoName}/contributors?per_page=10`);
+    default:
+      return { error: `Unknown command: ${command}` };
   }
 }
 
@@ -135,12 +178,20 @@ async function execGithubQuery({ command, repo }) {
 export async function executeTool(name, input) {
   try {
     switch (name) {
-      case 'awp_api': return await execAwpApi(input);
-      case 'benchmark_api': return await execBenchmarkApi(input);
-      case 'chain_query': return await execChainQuery(input);
-      case 'github_query': return await execGithubQuery(input);
-      case 'read_knowledge': return readKnowledge(input.filename);
-      default: return { error: `Unknown tool: ${name}` };
+      case 'awp_api':
+        return await execAwpApi(input);
+      case 'worknet_api':
+        return await execWorknetApi(input);
+      case 'chain_query':
+        return await execChainQuery(input);
+      case 'github_query':
+        return await execGithubQuery(input);
+      case 'list_worknets':
+        return listWorknets();
+      case 'read_knowledge':
+        return readKnowledge(input.path);
+      default:
+        return { error: `Unknown tool: ${name}` };
     }
   } catch (e) {
     return { error: e.message };
