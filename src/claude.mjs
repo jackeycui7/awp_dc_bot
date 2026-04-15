@@ -60,25 +60,45 @@ export async function chat(messages, onToolCall) {
   while (rounds < MAX_TOOL_ROUNDS) {
     rounds++;
 
+    console.log('[claude] sending messages:', JSON.stringify(claudeMessages.map(m => ({
+      role: m.role,
+      content: typeof m.content === 'string' ? m.content.slice(0, 50) :
+        Array.isArray(m.content) ? m.content.map(b => ({ type: b.type, ...(b.type === 'image' ? { source_type: b.source?.type } : {}) })) : '?'
+    }))));
+
+    // Retry on transient proxy errors (400 Invalid JSON, 500 no token, etc.)
     let response;
-    try {
-      console.log('[claude] sending messages:', JSON.stringify(claudeMessages.map(m => ({
-        role: m.role,
-        content: typeof m.content === 'string' ? m.content.slice(0, 50) :
-          Array.isArray(m.content) ? m.content.map(b => ({ type: b.type, ...(b.type === 'image' ? { source_type: b.source?.type } : {}) })) : '?'
-      }))));
-      response = await getClient().messages.create({
-        model: getModel(),
-        max_tokens: 4096,
-        system: systemPrompt,
-        tools,
-        messages: claudeMessages,
-      });
-    } catch (e) {
-      if (e.message?.includes('timeout') || e.code === 'ETIMEDOUT') {
+    let lastErr;
+    const MAX_RETRIES = 4;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        response = await getClient().messages.create({
+          model: getModel(),
+          max_tokens: 4096,
+          system: systemPrompt,
+          tools,
+          messages: claudeMessages,
+        });
+        lastErr = null;
+        break;
+      } catch (e) {
+        lastErr = e;
+        const msg = e.message || '';
+        const retriable =
+          msg.includes('Invalid JSON request body') ||
+          msg.includes('没有可用的token') ||
+          msg.includes('timeout') ||
+          e.code === 'ETIMEDOUT' ||
+          (e.status >= 500 && e.status < 600);
+        console.error(`[claude] attempt ${attempt}/${MAX_RETRIES} failed:`, msg.slice(0, 200));
+        if (!retriable || attempt === MAX_RETRIES) break;
+        await new Promise(r => setTimeout(r, 500 * attempt)); // backoff: 0.5s, 1s, 1.5s
+      }
+    }
+    if (lastErr) {
+      if (lastErr.message?.includes('timeout') || lastErr.code === 'ETIMEDOUT') {
         return 'Sorry, the AI service is slow right now. Please try again later.';
       }
-      console.error('Claude API error:', e.message);
       return 'Sorry, the service encountered an error. Please try again later.';
     }
 
