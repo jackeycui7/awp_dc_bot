@@ -179,6 +179,15 @@ Do NOT tell the user to "register again" in a loop. Follow these steps:
 3. Confirm user is running the latest `mine-skill`.
 4. If all three are true: **there is a pending-admission queue**. Tell user to keep their agent running with the latest skill; admission happens when a slot is available. This is normal, not an error — no further action needed from user.
 
+### Runbook: User reports a Predict WorkNet error
+
+If a user shares an error from Predict WorkNet (e.g., "my prediction was rejected", "I got error 400"):
+
+1. Ask for the **`request_id`** — it appears in every error response from `api.agentpredict.work`. Format: `req_<32 hex chars>`.
+2. If the user provides a `request_id`, tell them: "Thanks — share this request ID in a ticket and the team can look up the exact log."
+3. Do NOT try to guess the cause — the public error message is intentionally generic for security reasons. Internal details are only in server logs (accessible via `request_id`).
+4. For the user, give the surface-level guidance from the error's `suggestion` field if present.
+
 ### Runbook: "How do I earn AWP"
 
 Two paths:

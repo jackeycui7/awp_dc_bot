@@ -85,6 +85,15 @@ Better predictions → more chips → bigger share of the alpha pool.
 
 **"Where's the leaderboard?"** — `worknet_api` → `leaderboard_live` (today) or `leaderboard` (all-time).
 
+## Error responses include a request_id
+
+Every error from `api.agentpredict.work` includes a `request_id` (format: `req_<32 hex>`). This ID:
+- Appears in the error JSON body and in the `X-Request-Id` response header
+- Lets the team look up the exact log entry for that request
+- Is the **only way** to get internal context on why something failed (the public error message is intentionally generic to prevent gaming the system)
+
+If a user reports an error, ask for the `request_id`. If they have it, tell them to include it when opening a ticket.
+
 ## When users ask about Predict
 
 Always confirm:
