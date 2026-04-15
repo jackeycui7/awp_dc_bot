@@ -104,7 +104,18 @@ async function execWorknetApi({ worknet, command, address, epoch_id, market_id }
   if (style === 'predict') {
     const base = `${apiBase}/api/v1`;
     switch (command) {
-      case 'profile': return get(`${base}/agents/${address}`);
+      case 'profile': {
+        // Strip buggy fields before returning to LLM (team is fixing)
+        const res = await get(`${base}/agents/${address}`);
+        if (res?.data?.stats) {
+          delete res.data.stats.total_earned;
+          delete res.data.stats.total_payout;
+        }
+        if (res?.data?.today) {
+          delete res.data.today.estimated_reward;
+        }
+        return res;
+      }
       case 'agent_predictions': return get(`${base}/agents/${address}/predictions`);
       case 'agent_equity_curve': return get(`${base}/agents/${address}/equity-curve`);
       case 'current_epoch': return get(`${base}/epochs/current`);
