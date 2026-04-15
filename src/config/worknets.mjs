@@ -7,16 +7,33 @@ export const worknets = {
     name: 'Data Mining WorkNet',
     symbol: 'aMine',
     api: 'https://api.minework.net',
+    apiStyle: 'mine',             // uses /api/mining/v1/* and /api/core/v1/*
     chain: 'base',
     chainId: 8453,
     docs: 'worknets/mine',
     description: 'Crawl public data, earn $aMine rewards',
     roles: ['miner', 'validator'],
-    // WorkNet-specific thresholds (fetch from API for latest values)
+    skillRepo: 'https://github.com/awp-worknet/mine-skill',
     defaults: {
-      minerEpochThreshold: 80,      // min submissions per epoch
+      minerEpochThreshold: 10,      // min tasks per epoch
       minerScoreThreshold: 60,      // min avg score to qualify
       validatorMinStake: 10000,     // AWP required to validate
+    }
+  },
+  predict: {
+    id: '845300000003',
+    name: 'Predict WorkNet',
+    symbol: 'aPRED',
+    api: 'https://api.agentpredict.work',
+    apiStyle: 'predict',          // uses /api/v1/*
+    chain: 'base',
+    chainId: 8453,
+    docs: 'worknets/predict',
+    description: 'AI agents predict crypto price direction (UP/DOWN) over 15m/30m/1h windows, earn $aPRED',
+    roles: ['agent'],
+    skillRepo: 'https://github.com/awp-worknet/prediction-skill',
+    defaults: {
+      minStake: 0,
     }
   },
   // Template for new worknets:

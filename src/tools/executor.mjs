@@ -69,49 +69,58 @@ async function execAwpApi({ method, params = {} }) {
   return result;
 }
 
-// Generic WorkNet API
-async function execWorknetApi({ worknet, command, address, epoch_id }) {
+// Generic WorkNet API — routes by worknet API style
+async function execWorknetApi({ worknet, command, address, epoch_id, market_id }) {
   const apiBase = getWorknetApi(worknet);
   if (!apiBase) {
     return { error: `Unknown worknet: ${worknet}. Available: ${Object.keys(worknets).join(', ')}` };
   }
 
-  // Build endpoint based on worknet type
-  // Currently all worknets follow similar API patterns, but can be customized per worknet
-  const base = `${apiBase}/api/mining/v1`;
+  const style = worknets[worknet]?.apiStyle || 'mine';
 
-  switch (command) {
-    case 'profile':
-      return get(`${base}/profiles/${address}`);
-    case 'worker':
-      return get(`${base}/profiles/miners/${address}`);
-    case 'worker_epochs':
-      return get(`${base}/profiles/miners/${address}/epochs`);
-    case 'validator_epochs':
-      return get(`${base}/profiles/validators/${address}/epochs`);
-    case 'epoch_snapshot':
-      return get(`${base}/epochs/${epoch_id}/snapshot`);
-    case 'epoch_settlement':
-      return get(`${base}/epochs/${epoch_id}/settlement-results`);
-    case 'workers_online':
-      return get(`${base}/miners/online`);
-    case 'validators_online':
-      return get(`${base}/validators/online`);
-    case 'workers_list':
-      return get(`${base}/miners`);
-    case 'config':
-      return get(`${apiBase}/api/core/v1/protocol-config`);
-    case 'network_stats':
-      return get(`${apiBase}/api/public/v1/stats`);
-    case 'protocol_info':
-      return get(`${apiBase}/api/public/v1/protocol-info`);
-    case 'datasets':
-      return get(`${apiBase}/api/core/v1/datasets`);
-    case 'current_epoch':
-      return get(`${apiBase}/api/core/v1/epochs/current`);
-    default:
-      return { error: `Unknown command: ${command}` };
+  // Mine-style API (Mine WorkNet): /api/mining/v1/*, /api/core/v1/*, /api/public/v1/*
+  if (style === 'mine') {
+    const base = `${apiBase}/api/mining/v1`;
+    switch (command) {
+      case 'profile': return get(`${base}/profiles/${address}`);
+      case 'worker': return get(`${base}/profiles/miners/${address}`);
+      case 'worker_epochs': return get(`${base}/profiles/miners/${address}/epochs`);
+      case 'validator_epochs': return get(`${base}/profiles/validators/${address}/epochs`);
+      case 'epoch_snapshot': return get(`${base}/epochs/${epoch_id}/snapshot`);
+      case 'epoch_settlement': return get(`${base}/epochs/${epoch_id}/settlement-results`);
+      case 'workers_online': return get(`${base}/miners/online`);
+      case 'validators_online': return get(`${base}/validators/online`);
+      case 'workers_list': return get(`${base}/miners`);
+      case 'config': return get(`${apiBase}/api/core/v1/protocol-config`);
+      case 'network_stats': return get(`${apiBase}/api/public/v1/stats`);
+      case 'protocol_info': return get(`${apiBase}/api/public/v1/protocol-info`);
+      case 'datasets': return get(`${apiBase}/api/core/v1/datasets`);
+      case 'current_epoch': return get(`${apiBase}/api/core/v1/epochs/current`);
+      default: return { error: `Unknown command for mine-style worknet: ${command}` };
+    }
   }
+
+  // Predict-style API (Predict WorkNet): /api/v1/*
+  if (style === 'predict') {
+    const base = `${apiBase}/api/v1`;
+    switch (command) {
+      case 'profile': return get(`${base}/agents/${address}`);
+      case 'agent_predictions': return get(`${base}/agents/${address}/predictions`);
+      case 'agent_equity_curve': return get(`${base}/agents/${address}/equity-curve`);
+      case 'current_epoch': return get(`${base}/epochs/current`);
+      case 'epoch_snapshot': return get(`${base}/epochs/${epoch_id}`);
+      case 'network_stats': return get(`${base}/feed/stats`);
+      case 'feed_live': return get(`${base}/feed/live`);
+      case 'leaderboard': return get(`${base}/leaderboard`);
+      case 'leaderboard_live': return get(`${base}/leaderboard/live`);
+      case 'markets_active': return get(`${base}/markets/active`);
+      case 'markets_resolved': return get(`${base}/markets/resolved`);
+      case 'market_detail': return get(`${base}/markets/${market_id}`);
+      default: return { error: `Unknown command for predict-style worknet: ${command}` };
+    }
+  }
+
+  return { error: `Unknown apiStyle: ${style}` };
 }
 
 // Base chain query

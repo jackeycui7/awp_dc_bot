@@ -54,37 +54,48 @@ export const tools = [
   },
   {
     name: 'worknet_api',
-    description: 'Query a specific WorkNet API for worker/validator status, epoch stats, and network info. Each WorkNet has its own API endpoint. Currently supported: "mine" (Data Mining WorkNet). Use this when a user asks about their status on a specific worknet.',
+    description: 'Query a specific WorkNet API for worker/validator/agent status, epoch stats, and network info. Each WorkNet has its own API. Use this when a user asks about their status on a specific worknet. Mine WorkNet has miners/validators; Predict WorkNet has agents predicting price direction.',
     input_schema: {
       type: 'object',
       properties: {
         worknet: {
           type: 'string',
-          enum: ['mine'],
-          description: 'Which worknet to query. "mine" = Data Mining WorkNet (aMine)'
+          enum: ['mine', 'predict'],
+          description: 'Which worknet to query. "mine" = Data Mining WorkNet (aMine). "predict" = Predict WorkNet (aPRED, crypto price prediction).'
         },
         command: {
           type: 'string',
           enum: [
-            'profile',           // Full status: worker + validator + current epoch stats
-            'worker',            // Basic worker info
-            'worker_epochs',     // Worker epoch history
-            'validator_epochs',  // Validator epoch history
-            'epoch_snapshot',    // Epoch snapshot (all participants)
-            'epoch_settlement',  // Epoch settlement results
-            'workers_online',    // List of online workers
-            'validators_online', // List of online validators
-            'workers_list',      // All workers (paginated)
-            'config',            // WorkNet protocol config (thresholds, etc.)
-            'network_stats',     // Online miner/validator counts + current epoch ID
-            'protocol_info',     // Min stake, chain ID, registration URL
-            'datasets',          // List active datasets (for "what can I crawl?")
-            'current_epoch'      // Current epoch window (start/end times, status)
+            // Mine WorkNet commands (worknet=mine)
+            'profile',              // Mine: miner+validator profile / Predict: agent profile
+            'worker',               // Mine only: basic miner info
+            'worker_epochs',        // Mine only: miner epoch history
+            'validator_epochs',     // Mine only: validator epoch history
+            'epoch_snapshot',       // Both: snapshot for an epoch
+            'epoch_settlement',     // Mine only: epoch settlement results
+            'workers_online',       // Mine only: online miners list
+            'validators_online',    // Mine only: online validators
+            'workers_list',         // Mine only: all miners
+            'config',               // Mine only: protocol config
+            'network_stats',        // Both: network-level stats
+            'protocol_info',        // Mine only: min stake, chain id
+            'datasets',             // Mine only: active datasets
+            'current_epoch',        // Both: current epoch window
+            // Predict WorkNet commands (worknet=predict)
+            'agent_predictions',    // Predict: agent's prediction history
+            'agent_equity_curve',   // Predict: agent's balance curve
+            'feed_live',            // Predict: live prediction feed
+            'leaderboard',          // Predict: agent rankings
+            'leaderboard_live',     // Predict: real-time rankings
+            'markets_active',       // Predict: open markets
+            'markets_resolved',     // Predict: settled markets
+            'market_detail'         // Predict: single market info
           ],
-          description: 'Command to execute'
+          description: 'Command to execute (commands are worknet-specific — see comments)'
         },
-        address: { type: 'string', description: 'Wallet address (for profile, worker, worker_epochs, validator_epochs)' },
-        epoch_id: { type: 'string', description: 'Epoch ID (for epoch_snapshot, epoch_settlement)' }
+        address: { type: 'string', description: 'Wallet address' },
+        epoch_id: { type: 'string', description: 'Epoch ID' },
+        market_id: { type: 'string', description: 'Market ID (Predict WorkNet only)' }
       },
       required: ['worknet', 'command']
     }
