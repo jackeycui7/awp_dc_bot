@@ -101,6 +101,14 @@ async function execWorknetApi({ worknet, command, address, epoch_id }) {
       return get(`${base}/miners`);
     case 'config':
       return get(`${apiBase}/api/core/v1/protocol-config`);
+    case 'network_stats':
+      return get(`${apiBase}/api/public/v1/stats`);
+    case 'protocol_info':
+      return get(`${apiBase}/api/public/v1/protocol-info`);
+    case 'datasets':
+      return get(`${apiBase}/api/core/v1/datasets`);
+    case 'current_epoch':
+      return get(`${apiBase}/api/core/v1/epochs/current`);
     default:
       return { error: `Unknown command: ${command}` };
   }

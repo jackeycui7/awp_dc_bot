@@ -75,7 +75,11 @@ export const tools = [
             'workers_online',    // List of online workers
             'validators_online', // List of online validators
             'workers_list',      // All workers (paginated)
-            'config'             // WorkNet protocol config (thresholds, etc.)
+            'config',            // WorkNet protocol config (thresholds, etc.)
+            'network_stats',     // Online miner/validator counts + current epoch ID
+            'protocol_info',     // Min stake, chain ID, registration URL
+            'datasets',          // List active datasets (for "what can I crawl?")
+            'current_epoch'      // Current epoch window (start/end times, status)
           ],
           description: 'Command to execute'
         },
