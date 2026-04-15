@@ -20,6 +20,7 @@ export const tools = [
             // Staking
             'staking.getBalance', 'staking.getUserBalanceGlobal', 'staking.getPositions', 'staking.getPositionsGlobal',
             'staking.getAllocations', 'staking.getAgentSubnetStake', 'staking.getAgentSubnets', 'staking.getSubnetTotalStake',
+            'staking.getPending', 'staking.getFrozen',
             // Worknets
             'subnets.list', 'subnets.listRanked', 'subnets.search', 'subnets.get', 'subnets.getSkills',
             'subnets.getEarnings', 'subnets.getAgentInfo', 'subnets.listAgents', 'subnets.getByOwner',
