@@ -239,26 +239,41 @@ async function execGithubQuery({ command, repo }) {
   }
 }
 
+// Wrap result with explicit success/error status so bot can't fabricate timeouts
+function markStatus(result) {
+  if (result && typeof result === 'object' && !Array.isArray(result)) {
+    // Network failure from fetchWithTimeout: has both `error` AND `url`
+    if (typeof result.error === 'string' && typeof result.url === 'string') {
+      return { _status: 'network_error', ...result };
+    }
+  }
+  // Everything else: tool call returned data successfully
+  // (the data itself may indicate an application-level issue, but the call succeeded)
+  return { _status: 'ok', _note: 'Tool call returned data successfully. If you see this marker, do NOT claim the API timed out or failed.', data: result };
+}
+
 // Main dispatcher
 export async function executeTool(name, input) {
   try {
+    let result;
     switch (name) {
       case 'awp_api':
-        return await execAwpApi(input);
+        result = await execAwpApi(input); break;
       case 'worknet_api':
-        return await execWorknetApi(input);
+        result = await execWorknetApi(input); break;
       case 'chain_query':
-        return await execChainQuery(input);
+        result = await execChainQuery(input); break;
       case 'github_query':
-        return await execGithubQuery(input);
+        result = await execGithubQuery(input); break;
       case 'list_worknets':
-        return listWorknets();
+        result = listWorknets(); break;
       case 'read_knowledge':
-        return readKnowledge(input.path);
+        result = readKnowledge(input.path); break;
       default:
-        return { error: `Unknown tool: ${name}` };
+        return { _status: 'error', error: `Unknown tool: ${name}` };
     }
+    return markStatus(result);
   } catch (e) {
-    return { error: e.message };
+    return { _status: 'error', error: e.message };
   }
 }
