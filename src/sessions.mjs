@@ -1,7 +1,7 @@
 // Session manager — per-user conversation context with 24h TTL
 const sessions = new Map();
 const SESSION_TTL = 24 * 60 * 60 * 1000;
-const MAX_MESSAGES = 40; // 20 pairs
+const MAX_MESSAGES = 12; // 6 pairs — keep short to prevent history poisoning
 
 export function getSession(userId) {
   let s = sessions.get(userId);
