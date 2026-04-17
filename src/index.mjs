@@ -1,4 +1,7 @@
 // Entry point
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first');
+
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
 import { handleMessage } from './discord.mjs';
 import { config } from 'dotenv';
