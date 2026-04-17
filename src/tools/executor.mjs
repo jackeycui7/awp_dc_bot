@@ -105,7 +105,7 @@ async function execWorknetApi({ worknet, command, address, epoch_id, market_id }
     const base = `${apiBase}/api/v1`;
     switch (command) {
       case 'profile': {
-        // Strip buggy fields before returning to LLM (team is fixing)
+        // Strip reward-related fields: buggy or unsettled
         const res = await get(`${base}/agents/${address}`);
         if (res?.data?.stats) {
           delete res.data.stats.total_earned;
@@ -113,6 +113,8 @@ async function execWorknetApi({ worknet, command, address, epoch_id, market_id }
         }
         if (res?.data?.today) {
           delete res.data.today.estimated_reward;
+          delete res.data.today.excess;
+          delete res.data.today.total_fed;
         }
         return res;
       }

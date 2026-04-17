@@ -85,21 +85,24 @@ Better predictions → more chips → bigger share of the alpha pool.
 
 **"Where's the leaderboard?"** — `worknet_api` → `leaderboard_live` (today) or `leaderboard` (all-time).
 
-## Fields to NOT report to users (buggy/internal)
+## Reward data rules (IMPORTANT)
 
-When querying `GET /api/v1/agents/{address}` (the `profile` command), the response includes some fields that are **currently unreliable**. Do NOT include these in your response to users:
+**NEVER show unsettled/estimated $aPRED earnings.** Only report settled (finalized) epoch data.
 
-- **`total_earned`** — this field has a known bug and shows incorrect $aPRED amounts. Do not quote this number.
-- **`total_payout`** — same internal field, don't show.
+Specifically:
+- **`total_earned`** — buggy, stripped from API response. Don't mention it.
+- **`total_payout`** — same, stripped.
+- **`estimated_reward`** — stripped. Do NOT calculate or estimate this yourself either.
+- **Do NOT calculate potential $aPRED rewards** from chip data (excess, balance, etc.). Chip stats are gameplay metrics, not reward predictions.
 
-**Safe to report**:
+**Safe to report** (these are factual, not reward estimates):
 - `persona`, `rank`, `joined_at`
 - `stats.accuracy`, `stats.correct`, `stats.incorrect`, `stats.total_submissions`, `stats.total_resolved`
 - `stats.favorite_asset`, `stats.favorite_window`
 - `stats.net_chips`, `stats.all_time_chips_won`, `stats.all_time_chips_spent`
-- `today.*` (all today fields — balance, submissions, accuracy, excess)
+- `today.balance`, `today.submissions`, `today.accuracy`, `today.correct`, `today.resolved`
 
-If a user asks "how much have I earned in $aPRED?", say: "That field is currently unreliable — the team is fixing it. For now, I can only show chip-level stats."
+If a user asks "how much $aPRED have I earned?" or "what will I earn today?", say: "Earnings are calculated at epoch settlement (UTC 00:00). I can show your chip stats and accuracy, but I can't show or estimate $aPRED amounts until the epoch settles."
 
 ## Error responses include a request_id
 
