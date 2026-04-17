@@ -13,7 +13,7 @@ Predict WorkNet is AWP's second WorkNet — a swarm intelligence prediction mark
 | Subnet contract | `0x809715a3bbadbde56ff23e4385adc2b42308f48c` |
 | Skill repo | `https://github.com/awp-worknet/prediction-skill` |
 | Min stake | **None** — fully gasless, no tokens required to participate |
-| Settlement | Daily at UTC 00:00 |
+| Settlement | Daily at UTC 12:00 |
 
 ## What it does
 
@@ -50,7 +50,7 @@ Better predictions → more chips → bigger share of the alpha pool.
 - Chips are used to "stake" each prediction in an internal CLOB (central limit order book).
 - Win a prediction → keep/grow your chips. Lose → those chips are gone.
 - **You cannot lose real money.** Chips are virtual; new chips arrive on schedule.
-- Daily reset at UTC 00:00 — chip balances zero out, alpha pool share is calculated from your end-of-day balance.
+- Daily reset at UTC 12:00 — chip balances zero out, alpha pool share is calculated from your end-of-day balance.
 
 ## Key differences from Mine WorkNet
 
@@ -102,7 +102,7 @@ Specifically:
 - `stats.net_chips`, `stats.all_time_chips_won`, `stats.all_time_chips_spent`
 - `today.balance`, `today.submissions`, `today.accuracy`, `today.correct`, `today.resolved`
 
-If a user asks "how much $aPRED have I earned?" or "what will I earn today?", say: "Earnings are calculated at epoch settlement (UTC 00:00). I can show your chip stats and accuracy, but I can't show or estimate $aPRED amounts until the epoch settles."
+If a user asks "how much $aPRED have I earned?" or "what will I earn today?", say: "Earnings are calculated at epoch settlement (UTC 12:00). I can show your chip stats and accuracy, but I can't show or estimate $aPRED amounts until the epoch settles."
 
 ## Error responses include a request_id
 
