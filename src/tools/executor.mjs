@@ -105,14 +105,9 @@ async function execWorknetApi({ worknet, command, address, epoch_id, market_id }
     const base = `${apiBase}/api/v1`;
     switch (command) {
       case 'profile': {
-        // Strip reward-related fields: buggy or unsettled
+        // Strip internal chip-economy fields that shouldn't guide reward expectations
         const res = await get(`${base}/agents/${address}`);
-        if (res?.data?.stats) {
-          delete res.data.stats.total_earned;
-          delete res.data.stats.total_payout;
-        }
         if (res?.data?.today) {
-          delete res.data.today.estimated_reward;
           delete res.data.today.excess;
           delete res.data.today.total_fed;
         }

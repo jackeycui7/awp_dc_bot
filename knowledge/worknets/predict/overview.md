@@ -87,22 +87,23 @@ Better predictions → more chips → bigger share of the alpha pool.
 
 ## Reward data rules (IMPORTANT)
 
-**NEVER show unsettled/estimated $aPRED earnings.** Only report settled (finalized) epoch data.
+**Only report settled (finalized) earnings.** Do NOT estimate or project today's rewards.
 
-Specifically:
-- **`total_earned`** — buggy, stripped from API response. Don't mention it.
-- **`total_payout`** — same, stripped.
-- **`estimated_reward`** — stripped. Do NOT calculate or estimate this yourself either.
-- **Do NOT calculate potential $aPRED rewards** from chip data (excess, balance, etc.). Chip stats are gameplay metrics, not reward predictions.
+The API now returns settled earnings correctly:
+- **`stats.total_earned`** — lifetime $aPRED earned (settled epochs only). Safe to report.
+- **`stats.total_awp_earned`** — lifetime AWP earned from Predict WorkNet (settled epochs only). Safe to report.
+- **`stats.total_payout`** — lifetime chip payouts. Safe to report.
+- **Do NOT calculate potential future $aPRED or AWP rewards** from chip data (excess, balance, etc.). Chip stats are gameplay metrics, not reward predictions.
 
-**Safe to report** (these are factual, not reward estimates):
+**Safe to report** (these are factual):
 - `persona`, `rank`, `joined_at`
+- `stats.total_earned`, `stats.total_awp_earned` (settled lifetime earnings)
 - `stats.accuracy`, `stats.correct`, `stats.incorrect`, `stats.total_submissions`, `stats.total_resolved`
 - `stats.favorite_asset`, `stats.favorite_window`
 - `stats.net_chips`, `stats.all_time_chips_won`, `stats.all_time_chips_spent`
 - `today.balance`, `today.submissions`, `today.accuracy`, `today.correct`, `today.resolved`
 
-If a user asks "how much $aPRED have I earned?" or "what will I earn today?", say: "Earnings are calculated at epoch settlement (UTC 12:00). I can show your chip stats and accuracy, but I can't show or estimate $aPRED amounts until the epoch settles."
+If a user asks "what will I earn today?", say: "Today's rewards are calculated at epoch settlement (UTC 12:00). I can show your settled lifetime earnings and current chip stats, but I can't estimate today's $aPRED or AWP until the epoch settles."
 
 ## Error responses include a request_id
 

@@ -19,11 +19,11 @@ export const tools = [
             'agents.getByOwner', 'agents.getDetail', 'agents.lookup',
             // Staking
             'staking.getBalance', 'staking.getUserBalanceGlobal', 'staking.getPositions', 'staking.getPositionsGlobal',
-            'staking.getAllocations', 'staking.getAgentSubnetStake', 'staking.getAgentSubnets', 'staking.getSubnetTotalStake',
+            'staking.getAllocations', 'staking.getAgentWorknetStake', 'staking.getAgentWorknets', 'staking.getWorknetTotalStake',
             'staking.getPending', 'staking.getFrozen',
             // Worknets
-            'subnets.list', 'subnets.listRanked', 'subnets.search', 'subnets.get', 'subnets.getSkills',
-            'subnets.getEarnings', 'subnets.getAgentInfo', 'subnets.listAgents', 'subnets.getByOwner',
+            'worknets.list', 'worknets.listRanked', 'worknets.search', 'worknets.get', 'worknets.getSkills',
+            'worknets.getEarnings', 'worknets.getAgentInfo', 'worknets.listAgents', 'worknets.getByOwner',
             // Emission
             'emission.getCurrent', 'emission.getSchedule', 'emission.listEpochs', 'emission.getEpochDetail',
             // Tokens
